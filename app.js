@@ -4,7 +4,10 @@
 var C=JSON.parse(document.getElementById('cfg').textContent),L=C.t,d=document,$=function(s,r){return(r||d).querySelector(s)},$$=function(s,r){return[].slice.call((r||d).querySelectorAll(s))};
 var ls={g:function(k){try{return localStorage.getItem(k)}catch(e){return null}},s:function(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
 var esc=function(s){return String(s).replace(/[&<>"]/g,function(m){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]})};
-var fmt=function(n){return String(n).replace(/\B(?=(\d{3})+(?!\d))/g,' ')};
+var fmt=function(n){return String(n).replace(/\B(?=(\d{3})+(?!\d))/g,'\u202f')};
+var BOT="aerodesign_kyiv_bot",BOTAPI="https://aerodesign-bot.moskovskijbogdan15.workers.dev",CM={"vypyska":["101","102","103","104"],"dytyache":["201","202","203","204"],"dlya-nei":["301","302","303","304"],"dlya-nioho":["401","402","403","404"],"napysy":["501","502","503","504","505","506"],"oformlennya":["601","602","603","604"],"cifry":["701"],"gender":["801"],"korobka":["901"]};
+var PR={};try{PR=Object.assign(JSON.parse(d.getElementById('pr').textContent),JSON.parse(d.getElementById('pro').textContent||'{}'))}catch(e){}
+var tok=function(s){return String(s).replace(/\{(\d{3})\}/g,function(m,c){return PR[c]!=null?fmt(PR[c]):m})};
 function el(h){var t=d.createElement('div');t.innerHTML=h.trim();return t.firstChild}
 var tt;function toast(m){var t=$('#toast');if(!t){t=el('<div id="toast" role="status"></div>');d.body.appendChild(t)}t.textContent=m;t.classList.add('on');clearTimeout(tt);tt=setTimeout(function(){t.classList.remove('on')},3600)}
 function copy(s){try{if(navigator.clipboard)return navigator.clipboard.writeText(s).catch(function(){})}catch(e){}}
@@ -19,16 +22,17 @@ if(rf&&rf!==ls.g('ad_my')){ls.s('ad_ref',rf);setTimeout(function(){toast(L.inv.g
 function extras(){var a=[],r=ls.g('ad_ref'),p=ls.g('ad_win');if(r)a.push(L.md.ref+r);if(p)a.push(L.md.promo+p);return a}
 
 /* ── Окно заказа ── */
-var md;function order(item){
- var msg=L.md.hi+item+'\n'+L.md.addr+'\n'+L.md.time+(extras().length?'\n'+extras().join('\n'):'');
- if(!md){md=el('<div class="md" hidden role="dialog" aria-modal="true" aria-labelledby="mdh"><div class="bx"><button class="xb" aria-label="×">×</button><h3 id="mdh">'+L.md.h+'</h3><label class="fld"><span>'+L.md.msg+'</span><textarea rows="5"></textarea></label><div class="ch"><a class="btn tgb" target="_blank" rel="noopener">'+L.md.tg+'</a><a class="btn vbb">'+L.md.vb+'</a><a class="btn b2" href="tel:'+C.phone+'">'+L.md.call+' · '+C.phoneH+'</a></div></div></div>');
+function botStart(item,start){var m=/^№(\d{3})/.exec(String(item)),a=[start||(m?'o'+m[1]:'site')],w=ls.g('ad_win');if(w)a.push('p'+w);return'https://t.me/'+BOT+'?start='+a.join('-')}
+var md;function order(item,start){
+ var raw=item;item=tok(item);var msg=L.md.hi+item+'\n'+L.md.addr+'\n'+L.md.time+(extras().length?'\n'+extras().join('\n'):'');
+ if(!md){md=el('<div class="md" hidden role="dialog" aria-modal="true" aria-labelledby="mdh"><div class="bx"><button class="xb" aria-label="×">×</button><h3 id="mdh">'+L.md.h+'</h3>'+(BOT?'<a class="btn b1 btb" target="_blank" rel="noopener" style="width:100%;margin-bottom:6px">'+L.md.bot+'</a><p class="note" style="margin:8px 0 4px">'+L.md.botAlt+'</p>':'')+'<label class="fld"><span>'+L.md.msg+'</span><textarea rows="5"></textarea></label><div class="ch"><a class="btn tgb" target="_blank" rel="noopener">'+L.md.tg+'</a><a class="btn vbb">'+L.md.vb+'</a><a class="btn b2" href="tel:'+C.phone+'">'+L.md.call+' · '+C.phoneH+'</a></div></div></div>');
   d.body.appendChild(md);
   md.addEventListener('click',function(e){if(e.target===md||e.target.closest('.xb'))closeMd()});
   var ta=$('textarea',md),upd=function(){var v=encodeURIComponent(ta.value);$('.tgb',md).href='https://t.me/'+C.tg+'?text='+v;$('.vbb',md).href='viber://chat?number=%2B'+C.phone.slice(1)+'&draft='+v};
   ta.addEventListener('input',upd);md._u=upd;
   $$('.tgb,.vbb',md).forEach(function(a){a.addEventListener('click',function(){copy(ta.value);setTimeout(function(){toast(L.md.copied)},300)})});
  }
- $('textarea',md).value=msg;md._u();md.hidden=false;lock(1);setTimeout(function(){$('.tgb',md).focus()},50);
+ $('textarea',md).value=msg;md._u();if(BOT)$('.btb',md).href=botStart(raw,start);md.hidden=false;lock(1);setTimeout(function(){$(BOT?'.btb':'.tgb',md).focus()},50);
  history.pushState({md:1},'');
 }
 var skip=0;
@@ -64,6 +68,7 @@ addEventListener('keydown',function(e){if(e.key==='Escape'){if(md&&!md.hidden)cl
 
 /* ── Конструктор надписи ── */
 var mk=$('#mk');if(mk){
+ var TCODE={latex:'501',foil:'502',bubble:'503',giant:'504'};L.types.forEach(function(t){var c=TCODE[t[0]];if(PR[c]!=null)t[2]=+PR[c]});
  var HX={latex:['#ffffff','#ff7aa8','#6cc6ff','#ff4d5e','#26232e','#9b7bff','#43d1b0','#e9b44c'],foil:['#e9b44c','#c9ccd3','#e8a587','#e8304a','#ff7aa8','#2a2733','#3d8bff'],bubble:['#ffffff'],giant:['#ffffff','#ff7aa8','#6cc6ff','#26232e','#e9b44c'],ink:['#ffffff','#1f1a2e','#d9a83a','#b8bcc6','#ff4f86','#e3263c']};
  var COL={};Object.keys(HX).forEach(function(k){COL[k]=HX[k].map(function(h,i){return[h,(L.cn[k]||[])[i]||h]})});var INK=COL.ink;
  var st={type:'latex',shape:'heart',col:'#ff7aa8',ink:null,font:0,qty:1};
@@ -98,8 +103,14 @@ var mk=$('#mk');if(mk){
   if(st.font&&!d.getElementById('cav')){var l=d.createElement('link');l.id='cav';l.rel='stylesheet';l.href='https://fonts.googleapis.com/css2?family=Caveat:wght@700&display=swap';l.onload=function(){setTimeout(draw,150)};d.head.appendChild(l)}draw()};
  $('#mk-n').onclick=function(e){var b=e.target.closest('button');if(!b)return;st.qty=Math.max(1,Math.min(50,st.qty+(+b.dataset.d)));$('#mk-n output').textContent=st.qty;draw()};
  $('#mk-ph').onclick=function(e){var b=e.target.closest('button');if(!b)return;txt.value=b.textContent;draw()};
+ window.ADmkPrices=function(){L.types.forEach(function(t){var c=TCODE[t[0]];if(PR[c]!=null)t[2]=+PR[c]});draw()};
+ var qp=new URLSearchParams(location.search);
+ if(qp.get('t')){txt.value=qp.get('t').slice(0,60);var qb=qp.get('b');if(TCODE[qb]){st.type=qb;$$('#mk-ty .pill').forEach(function(z){z.classList.toggle('on',z.dataset.v===qb)})}
+  var qs=qp.get('s');if(qs){st.shape=qs;$$('#mk-shp .pill').forEach(function(z){z.classList.toggle('on',z.dataset.v===qs)})}
+  var qc=qp.get('c');if(qc!=null&&COL[st.type][+qc])st.col=COL[st.type][+qc][0];var qi=qp.get('i');if(qi!=null&&INK[+qi]){st.ink=INK[+qi][0];sw($('#mk-i'),INK,st.ink,function(v){st.ink=v})}
+  var qn=+qp.get('n');if(qn>0){st.qty=Math.min(50,qn);$('#mk-n output').textContent=st.qty}setTimeout(function(){mk.scrollIntoView({block:'start'})},250)}
  txt.addEventListener('input',draw);colors();draw();
- $('#mk-o').onclick=function(){var t=tp(),cn=$('#mk-c .on'),ik=$('#mk-i .on');order(C.capT+' «'+(txt.value.trim()||'…')+'» — '+$('#mk-q').textContent+' = '+fmt(t[2]*st.qty)+' '+L.uah+(cn&&st.type!=='bubble'?'; '+L.mkColor.toLowerCase()+': '+cn.dataset.n:'')+(ik?'; '+L.mkInk.toLowerCase()+': '+ik.dataset.n:'')+(st.font?'; '+L.mkFonts[1].toLowerCase():''))};
+ $('#mk-o').onclick=function(){var t=tp(),cn=$('#mk-c .on'),ik=$('#mk-i .on');order(C.capT+' «'+(txt.value.trim()||'…')+'» — '+$('#mk-q').textContent+' = '+fmt(t[2]*st.qty)+' '+L.uah+(cn&&st.type!=='bubble'?'; '+L.mkColor.toLowerCase()+': '+cn.dataset.n:'')+(ik?'; '+L.mkInk.toLowerCase()+': '+ik.dataset.n:'')+(st.font?'; '+L.mkFonts[1].toLowerCase():''),'ins')};
 }
 
 /* ── Приглашение друга ── */
@@ -136,5 +147,13 @@ var stg=$('#stage');if(stg){
  var idle=function(){(window.requestIdleCallback||function(f){setTimeout(f,1200)})(go3,{timeout:3000})};
  if(d.readyState==='complete')setTimeout(idle,600);else addEventListener('load',function(){setTimeout(idle,600)});
 }
+/* ── Живые цены из Telegram-бота (админ меняет цену в боте — сайт подхватывает) ── */
+function applyPrices(j){if(!j||!j.p)return;var hid={};(j.h||[]).forEach(function(c){hid[c]=1});Object.keys(j.p).forEach(function(c){PR[c]=j.p[c]});
+ $$('[data-p]').forEach(function(e){var c=e.getAttribute('data-p');if(PR[c]!=null)e.textContent=fmt(PR[c])});
+ $$('[data-c]').forEach(function(e){if(hid[e.getAttribute('data-c')])e.remove()});
+ $$('[data-min]').forEach(function(e){var l=(CM[e.getAttribute('data-min')]||[]).filter(function(c){return!hid[c]&&PR[c]!=null}).map(function(c){return+PR[c]});if(l.length)e.textContent=fmt(Math.min.apply(0,l))});
+ if(window.ADmkPrices)window.ADmkPrices()}
+if(BOTAPI&&window.fetch)fetch(BOTAPI+'/prices.json').then(function(r){return r.json()}).then(applyPrices).catch(function(){});
+if(BOT){var fc=$$('.ft > div')[2];if(fc)fc.appendChild(el('<a href="https://t.me/'+BOT+'" target="_blank" rel="noopener">🤖 Бот @'+BOT+'</a>'))}
 window.ADorder=order;window.ADtoast=toast;
 })();
