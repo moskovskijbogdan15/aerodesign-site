@@ -16,6 +16,19 @@ function lock(on){d.documentElement.classList.toggle('lock',!!on)}
 /* ── «Сейчас принимаем» по киевскому времени ── */
 var lv=$('.live');if(lv){try{var h=+new Intl.DateTimeFormat('en-GB',{hour:'numeric',hour12:false,timeZone:'Europe/Kyiv'}).format(new Date());if(h>=23||h<8){lv.classList.add('n');lv.lastChild.textContent=L.liveOff}}catch(e){}}
 
+/* ── Фон: днём небо с облаками и шариками, ночью «вечірка» с блёстками (по восходу/закату в Киеве) ── */
+var BCOL=['#ff7aa8','#6cc6ff','#f0b23c','#9b7bff','#2fd0a7','#ff4f86'];
+function bsvg(c,op,glow){var n=parseInt(c.slice(1),16),dk='#'+[n>>16,n>>8&255,n&255].map(function(x){return Math.round(x*.68).toString(16).padStart(2,'0')}).join(''),id='bg'+Math.random().toString(36).slice(2,8);
+ return'<svg viewBox="0 0 100 162" style="opacity:'+op+(glow?';filter:drop-shadow(0 0 16px '+c+'99)':'')+'"><defs><radialGradient id="'+id+'" cx="34%" cy="28%" r="78%"><stop offset="0" stop-color="#fff" stop-opacity=".9"/><stop offset=".22" stop-color="'+c+'"/><stop offset="1" stop-color="'+dk+'"/></radialGradient></defs><path d="M50 4C23 4 6 26 6 52c0 28 23 51 44 55 21-4 44-27 44-55C94 26 77 4 50 4Z" fill="url(#'+id+')"/><path d="M45.5 110h9l-4.5-6z" fill="'+dk+'"/><path d="M50 110c-7 12 7 19 0 30s7 13 0 22" stroke="#bcb1b8" stroke-width="1.3" fill="none"/></svg>'}
+function decor(t){var night=t==='night',small=innerWidth<860;$$('.sky .fx').forEach(function(fx){var s='',big=!!fx.closest('.hero2');
+ if(night){for(var i=0;i<(big?(small?14:24):10);i++)s+='<i class="sp" style="left:'+((i*37+7)%97)+'%;top:'+((i*53+11)%86)+'%;animation-delay:-'+(i%7)*.4+'s;font-size:'+(9+(i%4)*5)+'px">✦</i>'}
+ else s='<i class="cl" style="width:230px;height:62px;left:3%;top:'+(big?'14%':'22%')+'"></i><i class="cl" style="width:160px;height:44px;left:6%;top:'+(big?'10%':'16%')+'"></i><i class="cl" style="width:260px;height:70px;right:2%;top:'+(big?'66%':'38%')+'"></i><i class="cl" style="width:180px;height:50px;left:46%;top:3%;opacity:.55"></i>';
+ var B=big?(small?[[1,44,84,3,7],[0,40,2,46,9]]:[[0,62,1,58,9],[1,50,44,2,7],[2,42,95,16,8],[3,54,93,70,10],[5,36,2,88,7]]):(small?[[1,34,88,10,8]]:[[1,40,92,14,8],[0,34,2,56,9]]);
+ B.forEach(function(b,k){s+='<div class="bl" style="width:'+b[1]+'px;left:'+b[2]+'%;top:'+b[3]+'%;--t:'+b[4]+'s;animation-delay:-'+(k*1.3)+'s">'+bsvg(BCOL[b[0]],night?.55:.62,night)+'</div>'});
+ fx.innerHTML=s})}
+var TH=document.documentElement.getAttribute('data-theme')||'day';decor(TH);
+if(window.ADth)setInterval(function(){var t=window.ADth();if(t!==TH){TH=t;document.documentElement.setAttribute('data-theme',t);decor(t)}},300000);
+
 /* ── Рефералка и промокод ── */
 var q=new URLSearchParams(location.search),rf=(q.get('ref')||'').replace(/[^A-Za-z0-9]/g,'').slice(0,12).toUpperCase();
 if(rf&&rf!==ls.g('ad_my')){ls.s('ad_ref',rf);setTimeout(function(){toast(L.inv.got)},900)}
@@ -25,14 +38,14 @@ function extras(){var a=[],r=ls.g('ad_ref'),p=ls.g('ad_win');if(r)a.push(L.md.re
 function botStart(item,start){var m=/^№(\d{3})/.exec(String(item)),a=[start||(m?'o'+m[1]:'site')],w=ls.g('ad_win');if(w)a.push('p'+w);return'https://t.me/'+BOT+'?start='+a.join('-')}
 var md;function order(item,start){
  var raw=item;item=tok(item);var msg=L.md.hi+item+'\n'+L.md.addr+'\n'+L.md.time+(extras().length?'\n'+extras().join('\n'):'');
- if(!md){md=el('<div class="md" hidden role="dialog" aria-modal="true" aria-labelledby="mdh"><div class="bx"><button class="xb" aria-label="×">×</button><h3 id="mdh">'+L.md.h+'</h3>'+(BOT?'<a class="btn b1 btb" target="_blank" rel="noopener" style="width:100%;margin-bottom:6px">'+L.md.bot+'</a><p class="note" style="margin:8px 0 4px">'+L.md.botAlt+'</p>':'')+'<label class="fld"><span>'+L.md.msg+'</span><textarea rows="5"></textarea></label><div class="ch"><a class="btn tgb" target="_blank" rel="noopener">'+L.md.tg+'</a><a class="btn vbb">'+L.md.vb+'</a><a class="btn b2" href="tel:'+C.phone+'">'+L.md.call+' · '+C.phoneH+'</a></div></div></div>');
+ if(!md){md=el('<div class="md" hidden role="dialog" aria-modal="true" aria-labelledby="mdh"><div class="bx"><button class="xb" aria-label="×">×</button><h3 id="mdh">'+L.md.h+'</h3><label class="fld"><span>'+L.md.msg+'</span><textarea rows="5"></textarea></label><div class="ch"><a class="btn tgb" target="_blank" rel="noopener">'+L.md.tg+'</a><a class="btn vbb">'+L.md.vb+'</a><a class="btn b1" href="tel:'+C.phone+'">'+L.md.call+' · '+C.phoneH+'</a></div>'+(BOT?'<p class="note" style="margin:16px 0 6px">'+L.md.botAlt+'</p><a class="btn b2 btb" target="_blank" rel="noopener" style="width:100%">'+L.md.bot+'</a>':'')+'</div></div>');
   d.body.appendChild(md);
   md.addEventListener('click',function(e){if(e.target===md||e.target.closest('.xb'))closeMd()});
   var ta=$('textarea',md),upd=function(){var v=encodeURIComponent(ta.value);$('.tgb',md).href='https://t.me/'+C.tg+'?text='+v;$('.vbb',md).href='viber://chat?number=%2B'+C.phone.slice(1)+'&draft='+v};
   ta.addEventListener('input',upd);md._u=upd;
   $$('.tgb,.vbb',md).forEach(function(a){a.addEventListener('click',function(){copy(ta.value);setTimeout(function(){toast(L.md.copied)},300)})});
  }
- $('textarea',md).value=msg;md._u();if(BOT)$('.btb',md).href=botStart(raw,start);md.hidden=false;lock(1);setTimeout(function(){$(BOT?'.btb':'.tgb',md).focus()},50);
+ $('textarea',md).value=msg;md._u();if(BOT)$('.btb',md).href=botStart(raw,start);md.hidden=false;lock(1);setTimeout(function(){$('.tgb',md).focus()},50);
  history.pushState({md:1},'');
 }
 var skip=0;
@@ -168,15 +181,6 @@ d.addEventListener('click',function(e){if(!e.target.closest('[data-game]'))retur
  d.body.insertBefore(b,d.body.firstChild);$('a',b).onclick=function(){ls.s('ad_lang',t)};$('.no',b).onclick=function(){ls.s('ad_lang',C.lang);b.remove()}})();
 $$('.langs a').forEach(function(a){a.addEventListener('click',function(){ls.s('ad_lang',a.getAttribute('hreflang'))})});
 
-/* ── 3D-шарики: только мощное устройство с GPU, после загрузки и простоя ── */
-var stg=$('#stage');if(stg){
- var ok=function(){if(matchMedia('(prefers-reduced-motion: reduce)').matches)return false;var c=navigator.connection;if(c&&(c.saveData||/2g/.test(c.effectiveType||'')))return false;if(navigator.deviceMemory&&navigator.deviceMemory<2)return false;
-  try{var cv=d.createElement('canvas'),gl=cv.getContext('webgl',{failIfMajorPerformanceCaveat:true});if(!gl)return false;var x=gl.getExtension('WEBGL_debug_renderer_info'),r=x?gl.getParameter(x.UNMASKED_RENDERER_WEBGL):'';var lc=gl.getExtension('WEBGL_lose_context');if(lc)lc.loseContext();return!/swiftshader|llvmpipe|softpipe|software|basic render/i.test(r)}catch(e){return false}};
- var go3=function(){if(!ok())return;var s=d.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';s.integrity='sha512-dLxUelApnYxpLt6K2iomGngnHO83iUvZytA3YjDUCjT0HDOHKXnVYdf3hU4JjM8uEhxf9nD1/ey98U3t2vZ0qQ==';s.crossOrigin='anonymous';s.referrerPolicy='no-referrer';
-  s.onload=function(){var b=d.createElement('script');b.src='/b3d.js?v='+C.v;d.head.appendChild(b)};d.head.appendChild(s)};
- var idle=function(){(window.requestIdleCallback||function(f){setTimeout(f,1200)})(go3,{timeout:3000})};
- if(d.readyState==='complete')setTimeout(idle,600);else addEventListener('load',function(){setTimeout(idle,600)});
-}
 /* ── Живые цены из Telegram-бота (админ меняет цену в боте — сайт подхватывает) ── */
 function applyPrices(j){if(!j||!j.p)return;var hid={};(j.h||[]).forEach(function(c){hid[c]=1});Object.keys(j.p).forEach(function(c){PR[c]=j.p[c]});
  $$('[data-p]').forEach(function(e){var c=e.getAttribute('data-p');if(PR[c]!=null)e.textContent=fmt(PR[c])});
