@@ -5,7 +5,7 @@ var C=JSON.parse(document.getElementById('cfg').textContent),L=C.t,d=document,$=
 var ls={g:function(k){try{return localStorage.getItem(k)}catch(e){return null}},s:function(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
 var esc=function(s){return String(s).replace(/[&<>"]/g,function(m){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]})};
 var fmt=function(n){return String(n).replace(/\B(?=(\d{3})+(?!\d))/g,'\u202f')};
-var BOT="aerodesign_kyiv_bot",BOTAPI="https://aerodesign-bot.moskovskijbogdan15.workers.dev",CM={"vypyska":["101","102","103","104"],"dytyache":["201","202","203","204"],"dlya-nei":["301","302","303","304"],"dlya-nioho":["401","402","403","404"],"napysy":["501","502","503","504","505","506"],"oformlennya":["601","602"],"cifry":["701"],"gender":["801"],"korobka":["901"]};
+var BOT="aerodesign_kyiv_bot",BOTAPI="https://aerodesign-bot.moskovskijbogdan15.workers.dev",CM={"vypyska":["101","102","103","104"],"dytyache":["201","202","203","204"],"dlya-nei":["301","302","303","304"],"dlya-nioho":["401","402","403","404"],"napysy":["501","502","503","504","505","506"],"oformlennya":["601"],"cifry":["701"],"gender":["801"],"korobka":["901"]};
 var PR={};try{PR=Object.assign(JSON.parse(d.getElementById('pr').textContent),JSON.parse(d.getElementById('pro').textContent||'{}'))}catch(e){}
 var tok=function(s){return String(s).replace(/\{(\d{3})\}/g,function(m,c){return PR[c]!=null?fmt(PR[c]):m})};
 function el(h){var t=d.createElement('div');t.innerHTML=h.trim();return t.firstChild}
