@@ -85,8 +85,8 @@ function closeLb(fromPop){if(!lbOpen)return;lb.hidden=true;lbOpen=false;if(!md||
  var t=$('.gal [data-lb="'+cur+'"]')||lbFrom;if(t&&t.classList){$$('.seen').forEach(function(x){x.classList.remove('seen')});if(t.closest('.gal'))t.classList.add('seen');var r=t.getBoundingClientRect();if(r.top<70||r.bottom>innerHeight)t.scrollIntoView({block:'center'});try{t.focus({preventScroll:true})}catch(e){}}
  if(!fromPop&&history.state&&history.state.lb){skip=1;history.back()}}
 d.addEventListener('click',function(e){var b=e.target.closest('[data-lb]');if(b){e.preventDefault();openLb(+b.getAttribute('data-lb'),b)}});
-addEventListener('popstate',function(){if(skip){skip=0;return}if(md&&!md.hidden){closeMd(true);return}if(lbOpen)closeLb(true)});
-addEventListener('keydown',function(e){if(e.key==='Escape'){if(md&&!md.hidden)closeMd();else if(lbOpen)closeLb()}if(lbOpen&&(!md||md.hidden)){if(e.key==='ArrowRight'||e.key==='ArrowDown'||e.key==='PageDown'){e.preventDefault();go(cur+1)}if(e.key==='ArrowLeft'||e.key==='ArrowUp'||e.key==='PageUp'){e.preventDefault();go(cur-1)}}});
+addEventListener('popstate',function(){if(skip){skip=0;return}if(cbm&&!cbm.hidden){cbClose(true);return}if(md&&!md.hidden){closeMd(true);return}if(lbOpen)closeLb(true)});
+addEventListener('keydown',function(e){if(e.key==='Escape'){if(cbm&&!cbm.hidden)cbClose();else if(md&&!md.hidden)closeMd();else if(lbOpen)closeLb()}if(lbOpen&&(!md||md.hidden)){if(e.key==='ArrowRight'||e.key==='ArrowDown'||e.key==='PageDown'){e.preventDefault();go(cur+1)}if(e.key==='ArrowLeft'||e.key==='ArrowUp'||e.key==='PageUp'){e.preventDefault();go(cur-1)}}});
 
 /* ── Конструктор надписи ── */
 var mk=$('#mk');if(mk){
@@ -188,5 +188,48 @@ function applyPrices(j){if(!j||!j.p)return;var hid={};(j.h||[]).forEach(function
  $$('[data-min]').forEach(function(e){var l=(CM[e.getAttribute('data-min')]||[]).filter(function(c){return!hid[c]&&PR[c]!=null}).map(function(c){return+PR[c]});if(l.length)e.textContent=fmt(Math.min.apply(0,l))});
  if(window.ADmkPrices)window.ADmkPrices()}
 if(BOTAPI&&window.fetch)fetch(BOTAPI+'/prices.json').then(function(r){return r.json()}).then(applyPrices).catch(function(){});
-window.ADorder=order;window.ADtoast=toast;
+/* ── «📞 Не додзвонились?» — окно «Передзвоніть мені»: номер уходит в бот (чат заявок, пометка 📞), Telegram не нужен ── */
+var CB=L.cb,cbm;
+function kyivH(){try{return+new Intl.DateTimeFormat('en-GB',{hour:'numeric',hour12:false,timeZone:'Europe/Kyiv'}).format(new Date())}catch(e){return 12}}
+function cbNight(){var h=kyivH();return h>=23||h<8}
+if(CB&&cbNight())$$('.cbs').forEach(function(b){var a=$('.cbs-d',b),n=$('.cbs-n',b);if(a&&n){a.hidden=true;n.hidden=false}});
+function cbSaved(){try{var s=JSON.parse(ls.g('ad_cb')||'null');return s&&Date.now()-s.t<3*36e5?s:null}catch(e){return null}}
+function cbOkText(ph,night,from){return'<b>'+esc((night?CB.okN:CB.ok).replace('{from}',from||9))+'</b><br>'+esc(CB.okP.replace('{phone}',ph))+'<button class="btn b1 cbx" type="button" style="width:100%;margin-top:14px">'+esc(CB.look)+'</button>'}
+function cbShow(st,msg){var f=$('.cbf',cbm),ok=$('.cbok',cbm),er=$('.cberr',cbm),alt=$('.cbalt',cbm);
+ f.hidden=st==='ok';ok.hidden=st!=='ok';er.hidden=st!=='bad'&&st!=='err';alt.hidden=st!=='err';
+ if(st==='ok')ok.innerHTML=msg;else if(msg)er.textContent=msg}
+function cbOpen(){
+ if(!CB)return;
+ if(!cbm){
+  cbm=el('<div class="md" hidden role="dialog" aria-modal="true" aria-labelledby="cbh"><div class="bx"><button class="xb" type="button" aria-label="×">×</button><h3 id="cbh">'+CB.h+'</h3><p class="note cbp" style="font-size:15px;margin-top:8px"></p>'
+   +'<form class="cbf" novalidate><label class="fld"><span>'+CB.phone+'</span><input name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="067 123 45 67" maxlength="22" required></label><label class="fld"><span>'+CB.name+'</span><input name="name" autocomplete="given-name" maxlength="40"></label><input class="hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true"><button class="btn b1" type="submit" style="width:100%">'+CB.send+'</button><p class="note">'+CB.priv+'</p></form>'
+   +'<div class="cbok" role="status" hidden></div><p class="cberr" role="alert" hidden></p>'
+   +'<div class="ch cbalt" hidden><a class="btn vbb" href="viber://chat?number=%2B'+C.phone.slice(1)+'">Viber</a><a class="btn tgb" href="https://t.me/'+C.tg+'" target="_blank" rel="noopener">Telegram</a><a class="btn b1" href="tel:'+C.phone+'">'+L.md.call+' · '+C.phoneH+'</a></div>'
+   +(BOT?'<p class="note" style="margin:18px 0 6px">'+CB.botAlt+'</p><a class="btn b2 cbbot" target="_blank" rel="noopener" style="width:100%">🤖 '+CB.bot+'</a>':'')+'</div></div>');
+  d.body.appendChild(cbm);
+  cbm.addEventListener('click',function(e){if(e.target===cbm||e.target.closest('.xb')||e.target.closest('.cbx'))cbClose()});
+  var f=$('.cbf',cbm),btn=$('button[type=submit]',f),pi=$('input[name=phone]',f),ni=$('input[name=name]',f),hp=$('input[name=website]',f);
+  f.addEventListener('submit',function(e){e.preventDefault();
+   var ph=pi.value.trim(),dg=ph.replace(/\D/g,'');
+   if(dg.length<9||dg.length>15){cbShow('bad',CB.bad);pi.focus();return}
+   if(!BOTAPI||!window.fetch){cbShow('err',CB.fail);return}
+   btn.disabled=true;btn.textContent=CB.sending;
+   fetch(BOTAPI+'/lead',{method:'POST',headers:{'content-type':'text/plain;charset=UTF-8'},body:JSON.stringify({phone:ph,name:ni.value.trim(),website:hp.value,lang:C.lang,page:location.pathname})})
+    .then(function(r){return r.json()}).then(function(j){
+     if(j&&j.ok){ls.s('ad_cb',JSON.stringify({t:Date.now(),p:ph}));cbShow('ok',cbOkText(ph,j.night,j.from))}
+     else cbShow(j&&j.e==='phone'?'bad':'err',j&&j.e==='phone'?CB.bad:j&&j.e==='rate'?CB.rate:CB.fail)})
+    .catch(function(){cbShow('err',CB.fail)})
+    .then(function(){btn.disabled=false;btn.textContent=CB.send})});
+ }
+ var sv=cbSaved(),n=cbNight();
+ $('.cbp',cbm).textContent=n?CB.pN:CB.p;
+ if(BOT)$('.cbbot',cbm).href=botStart('','call');
+ if(sv)cbShow('ok',cbOkText(sv.p,n,9));else cbShow('form');
+ cbm.hidden=false;lock(1);history.pushState({cb:1},'');
+ setTimeout(function(){var i=$('input[name=phone]',cbm);if(i&&!sv)i.focus()},60)
+}
+function cbClose(fromPop){if(!cbm||cbm.hidden)return;cbm.hidden=true;if(!lbOpen&&(!md||md.hidden))lock(0);if(!fromPop&&history.state&&history.state.cb){skip=1;history.back()}}
+d.addEventListener('click',function(e){var b=e.target.closest('[data-cb]');if(b){e.preventDefault();cbOpen()}});
+if(/[?&#]call\b/.test(location.search+location.hash))setTimeout(cbOpen,300);
+window.ADorder=order;window.ADtoast=toast;window.ADcb=cbOpen;
 })();
